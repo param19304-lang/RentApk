@@ -14,7 +14,7 @@ import com.example.rentmanagement.domain.model.PaymentMethod
         ForeignKey(entity = PropertyEntity::class, parentColumns = ["id"], childColumns = ["propertyId"], onDelete = ForeignKey.RESTRICT),
         ForeignKey(entity = UnitEntity::class, parentColumns = ["id"], childColumns = ["unitId"], onDelete = ForeignKey.RESTRICT)
     ],
-    indices = [Index("rentId"), Index("tenantId"), Index("propertyId")]
+    indices = [Index("rentId"), Index("tenantId"), Index("propertyId"), Index("unitId")]
 )
 data class PaymentEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
