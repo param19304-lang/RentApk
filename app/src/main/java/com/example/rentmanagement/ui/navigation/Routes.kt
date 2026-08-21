@@ -25,11 +25,15 @@ object Routes {
     const val LEASE_FORM = "lease_form"
 
     const val EXPENSES = "expenses"
+    const val EXPENSE_FORM = "expense_form?expenseId={expenseId}"
+    fun expenseForm(expenseId: Long? = null) = "expense_form?expenseId=${expenseId ?: -1}"
+
     const val REPORTS = "reports"
     const val REMINDERS = "reminders"
     const val DOCUMENTS = "documents"
     const val SETTINGS = "settings"
     const val BACKUP_RESTORE = "backup_restore"
+    const val USER_MANAGEMENT = "user_management"
 }
 
 data class BottomNavItem(val route: String, val label: String)
