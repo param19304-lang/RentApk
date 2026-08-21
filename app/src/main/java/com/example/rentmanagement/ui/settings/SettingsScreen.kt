@@ -33,6 +33,11 @@ import com.example.rentmanagement.ui.theme.AppThemePalettes
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    currentUserName: String,
+    currentUserRole: String,
+    isAdmin: Boolean,
+    onManageUsers: () -> Unit,
+    onLogout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val themeMode by viewModel.themeMode.collectAsState()
@@ -58,6 +63,25 @@ fun SettingsScreen(
     ) { padding ->
         Column(Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
 
+            SectionHeader("Account")
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(currentUserName, style = MaterialTheme.typography.titleMedium)
+                    Text(currentUserRole, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (isAdmin) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = onManageUsers, modifier = Modifier.fillMaxWidth()) { Text("Manage Users") }
+            }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onLogout,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) { Text("Log Out") }
+
+            Spacer(Modifier.height(24.dp))
             SectionHeader("Appearance")
             SingleChoiceSegment(
                 options = listOf(ThemeMode.LIGHT to "Light", ThemeMode.DARK to "Dark", ThemeMode.SYSTEM to "System"),
