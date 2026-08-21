@@ -19,7 +19,7 @@ import com.example.rentmanagement.data.entities.*
         ReminderEntity::class
     ],
     version = 1,
-    exportSchema = true
+    exportSchema = false // TODO Phase 2: set true + wire room.schemaLocation once real Migrations replace fallbackToDestructiveMigration()
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
