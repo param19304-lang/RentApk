@@ -31,4 +31,7 @@ abstract class RepositoryModule {
 
     @Binds @Singleton
     abstract fun bindExpenseRepository(impl: ExpenseRepositoryImpl): ExpenseRepository
+
+    @Binds @Singleton
+    abstract fun bindUserAccountRepository(impl: UserAccountRepositoryImpl): UserAccountRepository
 }
