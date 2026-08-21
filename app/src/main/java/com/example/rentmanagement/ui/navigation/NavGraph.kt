@@ -17,7 +17,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.rentmanagement.data.entities.UserAccountEntity
+import com.example.rentmanagement.domain.model.UserRole
+import com.example.rentmanagement.ui.auth.UserManagementScreen
 import com.example.rentmanagement.ui.dashboard.DashboardScreen
+import com.example.rentmanagement.ui.expenses.AddEditExpenseScreen
+import com.example.rentmanagement.ui.expenses.ExpensesScreen
 import com.example.rentmanagement.ui.leases.AddLeaseScreen
 import com.example.rentmanagement.ui.leases.LeasesScreen
 import com.example.rentmanagement.ui.more.MoreScreen
@@ -41,8 +46,12 @@ private fun bottomIcon(route: String) = when (route) {
 }
 
 @Composable
-fun AppScaffold() {
+fun AppScaffold(
+    currentUser: UserAccountEntity,
+    onLogout: () -> Unit
+) {
     val navController = rememberNavController()
+    val isAdmin = currentUser.role == UserRole.ADMIN
 
     Scaffold(
         bottomBar = {
@@ -78,7 +87,7 @@ fun AppScaffold() {
                     onAddProperty = { navController.navigate(Routes.propertyForm()) },
                     onAddTenant = { navController.navigate(Routes.tenantForm()) },
                     onRecordPayment = { navController.navigate(Routes.RENT) },
-                    onAddExpense = { navController.navigate(Routes.MORE) }
+                    onAddExpense = { navController.navigate(Routes.expenseForm()) }
                 )
             }
             composable(Routes.PROPERTIES) {
@@ -140,14 +149,16 @@ fun AppScaffold() {
             }
             composable(Routes.MORE) {
                 MoreScreen(
+                    isAdmin = isAdmin,
                     onTenants = { navController.navigate(Routes.TENANTS) },
-                    onExpenses = { /* Phase 2 */ },
+                    onExpenses = { navController.navigate(Routes.EXPENSES) },
                     onLeases = { navController.navigate(Routes.LEASES) },
-                    onReports = { /* Phase 2 */ },
+                    onReports = { /* Phase 2 (next up) */ },
                     onReminders = { /* Phase 2 */ },
                     onDocuments = { /* Phase 2 */ },
                     onSettings = { navController.navigate(Routes.SETTINGS) },
-                    onBackupRestore = { /* Phase 2 */ }
+                    onBackupRestore = { /* Phase 2 */ },
+                    onUsers = { navController.navigate(Routes.USER_MANAGEMENT) }
                 )
             }
             composable(Routes.TENANTS) {
@@ -173,8 +184,37 @@ fun AppScaffold() {
             composable(Routes.LEASE_FORM) {
                 AddLeaseScreen(onBack = { navController.popBackStack() })
             }
+            composable(Routes.EXPENSES) {
+                ExpensesScreen(
+                    onBack = { navController.popBackStack() },
+                    onAddExpense = { navController.navigate(Routes.expenseForm()) },
+                    onOpenExpense = { id -> navController.navigate(Routes.expenseForm(id)) }
+                )
+            }
+            composable(
+                route = Routes.EXPENSE_FORM,
+                arguments = listOf(navArgument("expenseId") { type = NavType.LongType; defaultValue = -1L })
+            ) { entry ->
+                val id = entry.arguments?.getLong("expenseId") ?: -1L
+                AddEditExpenseScreen(expenseId = if (id > 0) id else null, onBack = { navController.popBackStack() })
+            }
             composable(Routes.SETTINGS) {
-                SettingsScreen(onBack = { navController.popBackStack() })
+                SettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    currentUserName = currentUser.fullName,
+                    currentUserRole = currentUser.role.name,
+                    isAdmin = isAdmin,
+                    onManageUsers = { navController.navigate(Routes.USER_MANAGEMENT) },
+                    onLogout = onLogout
+                )
+            }
+            if (isAdmin) {
+                composable(Routes.USER_MANAGEMENT) {
+                    UserManagementScreen(
+                        onBack = { navController.popBackStack() },
+                        currentUserId = currentUser.id
+                    )
+                }
             }
         }
     }
