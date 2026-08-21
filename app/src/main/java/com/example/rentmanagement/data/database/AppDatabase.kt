@@ -16,10 +16,11 @@ import com.example.rentmanagement.data.entities.*
         PaymentEntity::class,
         ExpenseEntity::class,
         DocumentEntity::class,
-        ReminderEntity::class
+        ReminderEntity::class,
+        UserAccountEntity::class
     ],
-    version = 1,
-    exportSchema = false // TODO Phase 2: set true + wire room.schemaLocation once real Migrations replace fallbackToDestructiveMigration()
+    version = 2,
+    exportSchema = false // TODO Phase 3: set true + wire room.schemaLocation once real Migrations replace fallbackToDestructiveMigration()
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -32,6 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao
     abstract fun documentDao(): DocumentDao
     abstract fun reminderDao(): ReminderDao
+    abstract fun userAccountDao(): UserAccountDao
 
     companion object {
         const val DATABASE_NAME = "rent_management.db"
