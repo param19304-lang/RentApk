@@ -22,3 +22,5 @@ enum class DocumentCategory { LEASE_AGREEMENT, ID_PROOF, BILL, RECEIPT, PHOTO, O
 enum class ThemeMode { LIGHT, DARK, SYSTEM }
 
 enum class AppColorTheme { MONO, MIDNIGHT, OCEAN, EMERALD, ROYAL, SUNSET, ROSE, GRAPHITE, CUSTOM }
+
+enum class UserRole { ADMIN, USER }
