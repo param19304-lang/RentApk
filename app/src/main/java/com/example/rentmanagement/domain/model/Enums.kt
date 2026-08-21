@@ -1,0 +1,24 @@
+package com.example.rentmanagement.domain.model
+
+enum class PropertyType { APARTMENT, HOUSE, SHOP, OFFICE, COMMERCIAL, ROOM, OTHER }
+
+enum class UnitStatus { VACANT, OCCUPIED, RESERVED, UNDER_MAINTENANCE }
+
+enum class LeaseStatus { ACTIVE, EXPIRING_SOON, EXPIRED, TERMINATED }
+
+enum class PaymentStatus { PAID, PARTIALLY_PAID, PENDING, OVERDUE }
+
+enum class PaymentMethod { CASH, UPI, BANK_TRANSFER, CHEQUE, CARD, OTHER }
+
+enum class ExpenseCategory {
+    MAINTENANCE, ELECTRICITY, WATER, REPAIRS, PROPERTY_TAX,
+    SOCIETY_CHARGES, CLEANING, SECURITY, INSURANCE, OTHER
+}
+
+enum class ReminderType { RENT_DUE, RENT_OVERDUE, LEASE_EXPIRING, PAYMENT_CONFIRMATION, MAINTENANCE }
+
+enum class DocumentCategory { LEASE_AGREEMENT, ID_PROOF, BILL, RECEIPT, PHOTO, OTHER }
+
+enum class ThemeMode { LIGHT, DARK, SYSTEM }
+
+enum class AppColorTheme { MONO, MIDNIGHT, OCEAN, EMERALD, ROYAL, SUNSET, ROSE, GRAPHITE, CUSTOM }

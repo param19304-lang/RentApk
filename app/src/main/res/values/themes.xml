@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.RentManagement" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
