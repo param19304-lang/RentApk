@@ -27,4 +27,7 @@ class Converters {
 
     @TypeConverter fun fromDocumentCategory(v: DocumentCategory): String = v.name
     @TypeConverter fun toDocumentCategory(v: String): DocumentCategory = DocumentCategory.valueOf(v)
+
+    @TypeConverter fun fromUserRole(v: UserRole): String = v.name
+    @TypeConverter fun toUserRole(v: String): UserRole = UserRole.valueOf(v)
 }
