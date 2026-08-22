@@ -2,7 +2,7 @@
 
 Kotlin + Jetpack Compose + Material 3 + MVVM + Room + Hilt + DataStore + WorkManager.
 
-## Status: Phase 1 complete
+## Status: Phase 1 + Phase 2 complete, plus a navigation redesign (drawer menu)
 
 Implemented now:
 - Project setup, Gradle config, package structure
@@ -29,11 +29,65 @@ Implemented now:
 - Unit tests for the rent math (total payable, partial/advance payments, status
   transitions) and lease status calculation
 
-Not yet built (Phase 2/3/4, entities are already in place for these):
-Expenses UI, Reports, PDF receipts, Notifications/WorkManager reminders,
-Backup & Restore, Documents UI, App PIN/biometric security, Room migrations
-(currently `fallbackToDestructiveMigration()`), instrumented UI tests, cloud sync,
-AI assistant.
+**New this pass:**
+- Multi-user auth: PBKDF2-hashed local login (no cloud), session persisted via
+  DataStore. First launch forces creating the first ADMIN account
+  (`AdminSetupScreen`); every account after that is created by an admin from
+  Settings > Manage Users. Two roles: `ADMIN` and `USER`. Admin-only areas
+  (Manage Users) are hidden from `USER` accounts in both the More menu and
+  Settings. Logout button in Settings.
+- Expenses module: full CRUD (category, amount, date, description, vendor,
+  notes per property), wired into Dashboard's "Add Expense" quick action and
+  the More menu — dashboard's Total Expenses/Net Income stats now reflect
+  real data instead of always reading 0.
+- App icon: adaptive icon (API 26+) + legacy mipmap fallback (API 24-25) for
+  all densities, matching the Mono theme.
+
+**Also added this pass:**
+- PDF receipts: after recording a payment, "Share Receipt (PDF)" generates a
+  one-page receipt (`utils/PdfReceiptGenerator.kt`, drawn directly with
+  `android.graphics.pdf.PdfDocument` — no third-party library) and opens the
+  system share sheet via a `FileProvider`.
+- Reports: Rent Collection / Expenses / Income / Tenant tabs with a month
+  stepper, each exportable as CSV or PDF (`utils/ReportExporter.kt`, generic
+  CSV writer + paginated PDF table renderer), shared the same way as receipts.
+- Notifications: a daily `HiltWorker` (`RentReminderWorker`) marks overdue
+  rent, then posts summary notifications for rent due soon, rent overdue, and
+  leases expiring soon — respecting the notifications-enabled and
+  reminder-days-before settings already in Settings. Runtime POST_NOTIFICATIONS
+  permission is requested on first login (API 33+).
+- Backup & Restore: exports/imports the raw Room SQLite file via the system
+  file picker (Storage Access Framework) — no JSON round-trip, so it's exact.
+  Restore asks for confirmation, then restarts the app to load the new file.
+- Documents: a flat document vault (pick a PDF/image via the system file
+  picker, persist read access, tag with a category) — global for now rather
+  than tenant/lease-scoped, since the picker + persisted-permission pattern is
+  the part worth getting right first.
+
+Not yet built (entities/repos already in place for most):
+App PIN/biometric lock (session auth exists; device-level PIN/biometric on
+top of it is still open), Room migrations (currently
+`fallbackToDestructiveMigration()` — increasingly important since the schema
+is now at v2), instrumented UI tests, cloud sync, AI assistant, per-tenant/
+lease document scoping in the UI (schema already supports it).
+
+## Navigation
+
+Replaced the old 5-tab bottom bar + "More" screen with:
+- **Bottom bar (4 tabs):** Dashboard, Properties, Rent, Payments — one-tap access
+  to the highest-frequency screens.
+- **Left slide-in drawer** (Material 3 `ModalNavigationDrawer`), opened via a
+  hamburger icon in the top-left of those 4 screens. Chosen over a right-side
+  panel because a left drawer is the established Android pattern for primary
+  navigation (right panels read as contextual/filter UI, not a main menu).
+  Contains everything: the 4 primary destinations, then Tenants / Leases /
+  Expenses / Reports / Documents, then Users (admin-only), then Settings /
+  Backup & Restore, then Log Out. Shows the signed-in user's name and role at
+  the top. Selecting an item closes the drawer and navigates in one motion.
+
+`ui/navigation/AppDrawerContent.kt` holds the drawer's contents;
+`ui/navigation/NavGraph.kt`'s `AppScaffold` wires the `DrawerState` and passes
+`onMenuClick` into the 4 primary screens.
 
 ## Project structure
 
