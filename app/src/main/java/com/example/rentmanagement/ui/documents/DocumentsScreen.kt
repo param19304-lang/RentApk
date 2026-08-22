@@ -102,6 +102,7 @@ fun DocumentsScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddDocumentDialog(
     error: String?,
