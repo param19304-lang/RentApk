@@ -34,4 +34,7 @@ abstract class RepositoryModule {
 
     @Binds @Singleton
     abstract fun bindUserAccountRepository(impl: UserAccountRepositoryImpl): UserAccountRepository
+
+    @Binds @Singleton
+    abstract fun bindDocumentRepository(impl: DocumentRepositoryImpl): DocumentRepository
 }

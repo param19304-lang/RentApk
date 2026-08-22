@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,6 +18,7 @@ import com.example.rentmanagement.ui.components.EmptyState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PropertiesScreen(
+    onMenuClick: () -> Unit,
     onAddProperty: () -> Unit,
     onOpenProperty: (Long) -> Unit,
     viewModel: PropertyViewModel = hiltViewModel()
@@ -24,7 +26,14 @@ fun PropertiesScreen(
     val properties by viewModel.properties.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Properties") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Properties") },
+                navigationIcon = {
+                    IconButton(onClick = onMenuClick) { Icon(Icons.Default.Menu, contentDescription = "Menu") }
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddProperty) {
                 Icon(Icons.Default.Add, contentDescription = "Add property")

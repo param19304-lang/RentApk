@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,6 +19,7 @@ import com.example.rentmanagement.utils.CurrencyFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
+    onMenuClick: () -> Unit,
     onAddProperty: () -> Unit,
     onAddTenant: () -> Unit,
     onRecordPayment: () -> Unit,
@@ -29,7 +32,16 @@ fun DashboardScreen(
         viewModel.ensureCurrentMonthRentGenerated()
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Dashboard") }) }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Dashboard") },
+                navigationIcon = {
+                    IconButton(onClick = onMenuClick) { Icon(Icons.Default.Menu, contentDescription = "Menu") }
+                }
+            )
+        }
+    ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             contentPadding = PaddingValues(16.dp),

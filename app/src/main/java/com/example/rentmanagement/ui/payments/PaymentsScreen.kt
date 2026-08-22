@@ -3,6 +3,8 @@ package com.example.rentmanagement.ui.payments
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -15,10 +17,22 @@ import com.example.rentmanagement.utils.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaymentsScreen(viewModel: PaymentViewModel = hiltViewModel()) {
+fun PaymentsScreen(
+    onMenuClick: () -> Unit,
+    viewModel: PaymentViewModel = hiltViewModel()
+) {
     val payments by viewModel.payments.collectAsState()
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Payments") }) }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Payments") },
+                navigationIcon = {
+                    IconButton(onClick = onMenuClick) { Icon(Icons.Default.Menu, contentDescription = "Menu") }
+                }
+            )
+        }
+    ) { padding ->
         if (payments.isEmpty()) {
             EmptyState(
                 "No payments recorded yet",

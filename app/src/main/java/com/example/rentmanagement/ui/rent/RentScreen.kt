@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import com.example.rentmanagement.utils.DateUtils
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RentScreen(
+    onMenuClick: () -> Unit,
     onRecordPayment: (Long) -> Unit,
     viewModel: RentViewModel = hiltViewModel()
 ) {
@@ -30,6 +32,9 @@ fun RentScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Rent · $billingMonth") },
+                navigationIcon = {
+                    IconButton(onClick = onMenuClick) { Icon(Icons.Default.Menu, contentDescription = "Menu") }
+                },
                 actions = {
                     IconButton(onClick = { viewModel.generateForCurrentMonth() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Generate this month's rent")

@@ -16,7 +16,6 @@ object Routes {
     const val PAYMENT_RECORD = "payment_record/{rentId}"
     fun paymentRecord(rentId: Long) = "payment_record/$rentId"
 
-    const val MORE = "more"
     const val TENANTS = "tenants"
     const val TENANT_FORM = "tenant_form?tenantId={tenantId}"
     fun tenantForm(tenantId: Long? = null) = "tenant_form?tenantId=${tenantId ?: -1}"
@@ -42,6 +41,5 @@ val bottomNavItems = listOf(
     BottomNavItem(Routes.DASHBOARD, "Dashboard"),
     BottomNavItem(Routes.PROPERTIES, "Properties"),
     BottomNavItem(Routes.RENT, "Rent"),
-    BottomNavItem(Routes.PAYMENTS, "Payments"),
-    BottomNavItem(Routes.MORE, "More")
+    BottomNavItem(Routes.PAYMENTS, "Payments")
 )
