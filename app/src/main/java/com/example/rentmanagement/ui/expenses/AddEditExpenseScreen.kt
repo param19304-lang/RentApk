@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.rentmanagement.domain.model.ExpenseCategory
 import com.example.rentmanagement.ui.components.AppDatePickerField
+import com.example.rentmanagement.ui.components.dismissKeyboardOnTap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +62,14 @@ fun AddEditExpenseScreen(
             )
         }
     ) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .dismissKeyboardOnTap()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+        ) {
 
             ExposedDropdownMenuBox(expanded = propertyMenu, onExpandedChange = { propertyMenu = it }) {
                 OutlinedTextField(

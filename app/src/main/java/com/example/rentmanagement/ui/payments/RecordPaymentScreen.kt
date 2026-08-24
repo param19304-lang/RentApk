@@ -20,6 +20,7 @@ import com.example.rentmanagement.domain.usecase.RecordPaymentResult
 import com.example.rentmanagement.ui.components.AppDatePickerField
 import com.example.rentmanagement.utils.CurrencyFormatter
 import com.example.rentmanagement.utils.ShareUtils
+import com.example.rentmanagement.ui.components.dismissKeyboardOnTap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,7 +98,14 @@ fun RecordPaymentScreen(
             return@Scaffold
         }
 
-        Column(Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .dismissKeyboardOnTap()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+        ) {
             rent?.let {
                 Text("Total payable: ${CurrencyFormatter.format(it.totalPayable)}", style = MaterialTheme.typography.bodyMedium)
                 Text("Already paid: ${CurrencyFormatter.format(it.amountPaid)}", style = MaterialTheme.typography.bodyMedium)

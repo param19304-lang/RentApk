@@ -13,6 +13,11 @@ import javax.inject.Inject
  * doesn't already exist. Any unpaid remainder from the lease's most recent rent
  * record is carried forward as previousOutstanding (business rule #4/#10 in the
  * spec: rent tied to a lease, historical records never silently deleted).
+ *
+ * A lease's rentStartDate (independent of its startDate — e.g. a free first
+ * month) gates generation: no rent record is created for a billing month that
+ * falls entirely before rent is due to start. This does not prorate the first
+ * chargeable month; the full monthlyRent applies once generation begins.
  */
 class GenerateMonthlyRentUseCase @Inject constructor(
     private val leaseRepository: LeaseRepository,
@@ -22,6 +27,9 @@ class GenerateMonthlyRentUseCase @Inject constructor(
         val activeLeases = leaseRepository.getActiveLeasesOnce()
         var created = 0
         for (lease in activeLeases) {
+            val rentStartBillingMonth = DateUtils.billingMonthOf(lease.rentStartDate)
+            if (billingMonth < rentStartBillingMonth) continue
+
             val existing = rentRepository.getRentForLeaseAndMonth(lease.id, billingMonth)
             if (existing != null) continue
 

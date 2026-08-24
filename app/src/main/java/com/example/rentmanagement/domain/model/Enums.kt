@@ -24,3 +24,17 @@ enum class ThemeMode { LIGHT, DARK, SYSTEM }
 enum class AppColorTheme { MONO, MIDNIGHT, OCEAN, EMERALD, ROYAL, SUNSET, ROSE, GRAPHITE, CUSTOM }
 
 enum class UserRole { ADMIN, USER }
+
+enum class DashboardTile(val label: String) {
+    PROPERTIES("Properties"),
+    UNITS("Units"),
+    TENANTS("Tenants"),
+    OCCUPIED("Occupied Units"),
+    VACANT("Vacant Units"),
+    RENT_OVERVIEW("Rent Overview"),
+    TOTAL_EXPENSES("Total Expenses"),
+    NET_INCOME("Net Income"),
+    RECENT_PAYMENTS("Recent Payments"),
+    UPCOMING_RENT("Upcoming Rent"),
+    LEASE_EXPIRY("Lease Expiry")
+}

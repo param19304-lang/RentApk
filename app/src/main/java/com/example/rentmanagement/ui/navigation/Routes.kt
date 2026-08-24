@@ -19,6 +19,8 @@ object Routes {
     const val TENANTS = "tenants"
     const val TENANT_FORM = "tenant_form?tenantId={tenantId}"
     fun tenantForm(tenantId: Long? = null) = "tenant_form?tenantId=${tenantId ?: -1}"
+    const val TENANT_DETAIL = "tenant_detail/{tenantId}"
+    fun tenantDetail(tenantId: Long) = "tenant_detail/$tenantId"
 
     const val LEASES = "leases"
     const val LEASE_FORM = "lease_form"
@@ -31,6 +33,7 @@ object Routes {
     const val REMINDERS = "reminders"
     const val DOCUMENTS = "documents"
     const val SETTINGS = "settings"
+    const val DASHBOARD_CUSTOMIZATION = "dashboard_customization"
     const val BACKUP_RESTORE = "backup_restore"
     const val USER_MANAGEMENT = "user_management"
 }

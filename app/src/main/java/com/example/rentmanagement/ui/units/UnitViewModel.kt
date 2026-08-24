@@ -3,7 +3,11 @@ package com.example.rentmanagement.ui.units
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.rentmanagement.data.entities.PropertyEntity
+import com.example.rentmanagement.data.entities.TenantEntity
 import com.example.rentmanagement.data.entities.UnitEntity
+import com.example.rentmanagement.data.repository.PropertyRepository
+import com.example.rentmanagement.data.repository.TenantRepository
 import com.example.rentmanagement.data.repository.UnitRepository
 import com.example.rentmanagement.domain.model.UnitStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,12 +21,20 @@ import javax.inject.Inject
 @HiltViewModel
 class UnitViewModel @Inject constructor(
     private val repository: UnitRepository,
+    propertyRepository: PropertyRepository,
+    tenantRepository: TenantRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val propertyId: Long = savedStateHandle.get<Long>("propertyId") ?: 0L
 
     val units: StateFlow<List<UnitEntity>> = repository.getUnitsForProperty(propertyId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val property: StateFlow<PropertyEntity?> = propertyRepository.observePropertyById(propertyId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val tenants: StateFlow<List<TenantEntity>> = tenantRepository.getAllTenants()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _saveError = MutableStateFlow<String?>(null)

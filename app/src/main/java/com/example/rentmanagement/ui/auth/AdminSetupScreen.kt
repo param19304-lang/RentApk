@@ -1,7 +1,9 @@
 package com.example.rentmanagement.ui.auth
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -10,6 +12,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.rentmanagement.ui.components.dismissKeyboardOnTap
 
 @Composable
 fun AdminSetupScreen(viewModel: AuthViewModel) {
@@ -21,7 +24,15 @@ fun AdminSetupScreen(viewModel: AuthViewModel) {
     val remoteError by viewModel.loginError.collectAsState()
     val isBusy by viewModel.isBusy.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .dismissKeyboardOnTap()
+            .verticalScroll(rememberScrollState())
+            .imePadding()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
             Text("Welcome to Rent Manager", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
             Spacer(Modifier.height(4.dp))

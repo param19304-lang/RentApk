@@ -34,8 +34,10 @@ import com.example.rentmanagement.ui.properties.PropertyDetailScreen
 import com.example.rentmanagement.ui.rent.RentScreen
 import com.example.rentmanagement.ui.reports.ReportsScreen
 import com.example.rentmanagement.ui.settings.BackupRestoreScreen
+import com.example.rentmanagement.ui.settings.DashboardCustomizationScreen
 import com.example.rentmanagement.ui.settings.SettingsScreen
 import com.example.rentmanagement.ui.tenants.AddEditTenantScreen
+import com.example.rentmanagement.ui.tenants.TenantDetailScreen
 import com.example.rentmanagement.ui.tenants.TenantsScreen
 import com.example.rentmanagement.ui.units.UnitFormScreen
 import kotlinx.coroutines.launch
@@ -186,7 +188,17 @@ fun AppScaffold(
                     TenantsScreen(
                         onBack = { navController.popBackStack() },
                         onAddTenant = { navController.navigate(Routes.tenantForm()) },
-                        onOpenTenant = { id -> navController.navigate(Routes.tenantForm(id)) }
+                        onOpenTenant = { id -> navController.navigate(Routes.tenantDetail(id)) }
+                    )
+                }
+                composable(
+                    route = Routes.TENANT_DETAIL,
+                    arguments = listOf(navArgument("tenantId") { type = NavType.LongType })
+                ) { entry ->
+                    val id = entry.arguments?.getLong("tenantId") ?: 0L
+                    TenantDetailScreen(
+                        onBack = { navController.popBackStack() },
+                        onEdit = { navController.navigate(Routes.tenantForm(id)) }
                     )
                 }
                 composable(
@@ -226,8 +238,12 @@ fun AppScaffold(
                         currentUserRole = currentUser.role.name,
                         isAdmin = isAdmin,
                         onManageUsers = { navController.navigate(Routes.USER_MANAGEMENT) },
+                        onCustomizeDashboard = { navController.navigate(Routes.DASHBOARD_CUSTOMIZATION) },
                         onLogout = onLogout
                     )
+                }
+                composable(Routes.DASHBOARD_CUSTOMIZATION) {
+                    DashboardCustomizationScreen(onBack = { navController.popBackStack() })
                 }
                 composable(Routes.REPORTS) {
                     ReportsScreen(onBack = { navController.popBackStack() })

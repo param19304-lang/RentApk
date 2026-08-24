@@ -2,9 +2,9 @@ package com.example.rentmanagement.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Typography
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import com.example.rentmanagement.domain.model.AppColorTheme
@@ -23,6 +23,7 @@ fun RentManagementTheme(
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
     val palette = AppThemePalettes.paletteFor(colorTheme, isDark, customAccent)
+    val semanticColors = AppSemanticColors.forMode(isDark)
 
     val colorScheme = if (isDark) {
         darkColorScheme(
@@ -48,9 +49,11 @@ fun RentManagementTheme(
         )
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography(),
-        content = content
-    )
+    CompositionLocalProvider(LocalSemanticColors provides semanticColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = AppTypography,
+            content = content
+        )
+    }
 }

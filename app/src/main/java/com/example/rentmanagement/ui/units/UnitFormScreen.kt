@@ -12,6 +12,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.rentmanagement.domain.model.UnitStatus
+import com.example.rentmanagement.ui.components.dismissKeyboardOnTap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +59,14 @@ fun UnitFormScreen(
             )
         }
     ) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .dismissKeyboardOnTap()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+        ) {
             OutlinedTextField(unitName, { unitName = it }, label = { Text("Unit number/name *") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(floor, { floor = it }, label = { Text("Floor") }, modifier = Modifier.fillMaxWidth())

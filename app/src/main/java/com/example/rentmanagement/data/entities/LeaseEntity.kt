@@ -22,6 +22,7 @@ data class LeaseEntity(
     val tenantId: Long,
     val startDate: Long,
     val endDate: Long,
+    val rentStartDate: Long = startDate,
     val monthlyRent: Double,
     val securityDeposit: Double = 0.0,
     val rentDueDay: Int = 5,

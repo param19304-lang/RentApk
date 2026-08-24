@@ -28,6 +28,7 @@ import com.example.rentmanagement.domain.model.AppColorTheme
 import com.example.rentmanagement.domain.model.ThemeMode
 import com.example.rentmanagement.ui.components.SectionHeader
 import com.example.rentmanagement.ui.theme.AppThemePalettes
+import com.example.rentmanagement.ui.components.dismissKeyboardOnTap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +38,7 @@ fun SettingsScreen(
     currentUserRole: String,
     isAdmin: Boolean,
     onManageUsers: () -> Unit,
+    onCustomizeDashboard: () -> Unit,
     onLogout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -61,7 +63,14 @@ fun SettingsScreen(
             )
         }
     ) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .dismissKeyboardOnTap()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+        ) {
 
             SectionHeader("Account")
             Card(modifier = Modifier.fillMaxWidth()) {
@@ -80,6 +89,10 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) { Text("Log Out") }
+
+            Spacer(Modifier.height(24.dp))
+            SectionHeader("Dashboard")
+            OutlinedButton(onClick = onCustomizeDashboard, modifier = Modifier.fillMaxWidth()) { Text("Customize Dashboard") }
 
             Spacer(Modifier.height(24.dp))
             SectionHeader("Appearance")

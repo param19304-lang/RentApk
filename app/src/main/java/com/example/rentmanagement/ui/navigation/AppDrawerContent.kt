@@ -1,6 +1,8 @@
 package com.example.rentmanagement.ui.navigation
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apartment
 import androidx.compose.material.icons.filled.AttachMoney
@@ -55,7 +57,7 @@ fun AppDrawerContent(
 ) {
     val isAdmin = currentUser.role == UserRole.ADMIN
 
-    ModalDrawerSheet {
+    ModalDrawerSheet(modifier = Modifier.verticalScroll(rememberScrollState())) {
         Column(Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
             Text("Rent Manager", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))

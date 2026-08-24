@@ -10,6 +10,7 @@ interface TenantRepository {
     suspend fun getTenantById(id: Long): TenantEntity?
     fun observeTenantById(id: Long): Flow<TenantEntity?>
     fun search(query: String): Flow<List<TenantEntity>>
+    fun getTenantCount(): Flow<Int>
     suspend fun addTenant(tenant: TenantEntity): Long
     suspend fun updateTenant(tenant: TenantEntity)
     suspend fun deleteTenant(id: Long)
@@ -22,6 +23,7 @@ class TenantRepositoryImpl @Inject constructor(
     override suspend fun getTenantById(id: Long) = dao.getTenantById(id)
     override fun observeTenantById(id: Long) = dao.observeTenantById(id)
     override fun search(query: String) = dao.search(query)
+    override fun getTenantCount() = dao.getTenantCount()
     override suspend fun addTenant(tenant: TenantEntity) = dao.insert(tenant)
     override suspend fun updateTenant(tenant: TenantEntity) = dao.update(tenant)
     override suspend fun deleteTenant(id: Long) = dao.softDelete(id)

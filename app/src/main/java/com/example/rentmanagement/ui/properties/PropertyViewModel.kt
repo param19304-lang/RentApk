@@ -3,7 +3,9 @@ package com.example.rentmanagement.ui.properties
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.rentmanagement.data.entities.PropertyEntity
+import com.example.rentmanagement.data.entities.UnitEntity
 import com.example.rentmanagement.data.repository.PropertyRepository
+import com.example.rentmanagement.data.repository.UnitRepository
 import com.example.rentmanagement.domain.model.PropertyType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,10 +17,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PropertyViewModel @Inject constructor(
-    private val repository: PropertyRepository
+    private val repository: PropertyRepository,
+    unitRepository: UnitRepository
 ) : ViewModel() {
 
     val properties: StateFlow<List<PropertyEntity>> = repository.getAllProperties()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val units: StateFlow<List<UnitEntity>> = unitRepository.getAllUnits()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _saveError = MutableStateFlow<String?>(null)

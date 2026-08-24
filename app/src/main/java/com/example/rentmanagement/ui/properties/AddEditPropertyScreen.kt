@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.rentmanagement.domain.model.PropertyType
+import com.example.rentmanagement.ui.components.dismissKeyboardOnTap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +59,9 @@ fun AddEditPropertyScreen(
             Modifier
                 .padding(padding)
                 .padding(16.dp)
+                .dismissKeyboardOnTap()
                 .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
             OutlinedTextField(name, { name = it }, label = { Text("Property name *") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(12.dp))

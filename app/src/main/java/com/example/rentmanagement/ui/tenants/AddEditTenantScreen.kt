@@ -1,4 +1,5 @@
 package com.example.rentmanagement.ui.tenants
+import com.example.rentmanagement.ui.components.dismissKeyboardOnTap
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -53,7 +54,14 @@ fun AddEditTenantScreen(
             )
         }
     ) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .dismissKeyboardOnTap()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+        ) {
             OutlinedTextField(fullName, { fullName = it }, label = { Text("Full name *") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(

@@ -55,6 +55,7 @@ class LeaseViewModel @Inject constructor(
         tenantId: Long,
         startDate: Long,
         endDate: Long,
+        rentStartDate: Long,
         monthlyRent: Double,
         securityDeposit: Double,
         rentDueDay: Int,
@@ -72,6 +73,14 @@ class LeaseViewModel @Inject constructor(
             _saveError.value = "Lease end date cannot be before start date"
             return
         }
+        if (rentStartDate < startDate) {
+            _saveError.value = "Rent start date cannot be before the lease start date"
+            return
+        }
+        if (rentStartDate > endDate) {
+            _saveError.value = "Rent start date cannot be after the lease end date"
+            return
+        }
         if (monthlyRent < 0) {
             _saveError.value = "Rent amount cannot be negative"
             return
@@ -85,7 +94,8 @@ class LeaseViewModel @Inject constructor(
             leaseRepository.addLease(
                 LeaseEntity(
                     propertyId = propertyId, unitId = unitId, tenantId = tenantId,
-                    startDate = startDate, endDate = endDate, monthlyRent = monthlyRent,
+                    startDate = startDate, endDate = endDate, rentStartDate = rentStartDate,
+                    monthlyRent = monthlyRent,
                     securityDeposit = securityDeposit, rentDueDay = rentDueDay,
                     gracePeriodDays = gracePeriodDays, lateFee = lateFee,
                     noticePeriodDays = noticePeriodDays, rentEscalationPercent = rentEscalationPercent,

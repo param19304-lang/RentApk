@@ -1,5 +1,6 @@
 package com.example.rentmanagement.ui.theme
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.example.rentmanagement.domain.model.AppColorTheme
 
@@ -17,6 +18,36 @@ data class ThemePalette(
     val border: Color,
     val onPrimary: Color = Color.White
 )
+
+/**
+ * Status-communicating colors (success/warning/error/info), independent of the
+ * chosen brand palette above — these stay conventional so status is always
+ * recognizable regardless of which of the 9 app themes is active.
+ */
+data class SemanticColors(
+    val success: Color,
+    val warning: Color,
+    val error: Color,
+    val info: Color
+)
+
+object AppSemanticColors {
+    val light = SemanticColors(
+        success = Color(0xFF1B8A5A),
+        warning = Color(0xFFB7791F),
+        error = Color(0xFFC0392B),
+        info = Color(0xFF1565C0)
+    )
+    val dark = SemanticColors(
+        success = Color(0xFF4ADE80),
+        warning = Color(0xFFFBBF24),
+        error = Color(0xFFF87171),
+        info = Color(0xFF60A5FA)
+    )
+    fun forMode(isDark: Boolean): SemanticColors = if (isDark) dark else light
+}
+
+val LocalSemanticColors = staticCompositionLocalOf { AppSemanticColors.light }
 
 object AppThemePalettes {
 

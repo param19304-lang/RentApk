@@ -4,6 +4,7 @@ import com.example.rentmanagement.data.entities.RentEntity
 import com.example.rentmanagement.data.repository.ExpenseRepository
 import com.example.rentmanagement.data.repository.PropertyRepository
 import com.example.rentmanagement.data.repository.RentRepository
+import com.example.rentmanagement.data.repository.TenantRepository
 import com.example.rentmanagement.data.repository.UnitRepository
 import com.example.rentmanagement.domain.model.PaymentStatus
 import com.example.rentmanagement.domain.model.UnitStatus
@@ -15,6 +16,7 @@ import javax.inject.Inject
 data class DashboardStats(
     val totalProperties: Int = 0,
     val totalUnits: Int = 0,
+    val totalTenants: Int = 0,
     val occupiedUnits: Int = 0,
     val vacantUnits: Int = 0,
     val expectedRentThisMonth: Double = 0.0,
@@ -29,14 +31,16 @@ private data class UnitOccupancy(
     val totalProperties: Int,
     val totalUnits: Int,
     val occupied: Int,
-    val vacant: Int
+    val vacant: Int,
+    val totalTenants: Int
 )
 
 class GetDashboardStatsUseCase @Inject constructor(
     private val propertyRepository: PropertyRepository,
     private val unitRepository: UnitRepository,
     private val rentRepository: RentRepository,
-    private val expenseRepository: ExpenseRepository
+    private val expenseRepository: ExpenseRepository,
+    private val tenantRepository: TenantRepository
 ) {
     operator fun invoke(): Flow<DashboardStats> {
         val billingMonth = DateUtils.currentBillingMonth()
@@ -47,9 +51,10 @@ class GetDashboardStatsUseCase @Inject constructor(
             propertyRepository.getPropertyCount(),
             unitRepository.getTotalUnitCount(),
             unitRepository.getUnitCountByStatus(UnitStatus.OCCUPIED),
-            unitRepository.getUnitCountByStatus(UnitStatus.VACANT)
-        ) { totalProperties, totalUnits, occupied, vacant ->
-            UnitOccupancy(totalProperties, totalUnits, occupied, vacant)
+            unitRepository.getUnitCountByStatus(UnitStatus.VACANT),
+            tenantRepository.getTenantCount()
+        ) { totalProperties, totalUnits, occupied, vacant, totalTenants ->
+            UnitOccupancy(totalProperties, totalUnits, occupied, vacant, totalTenants)
         }
 
         val rentAndExpensesFlow: Flow<Pair<List<RentEntity>, Double>> = combine(
@@ -69,6 +74,7 @@ class GetDashboardStatsUseCase @Inject constructor(
             DashboardStats(
                 totalProperties = occupancy.totalProperties,
                 totalUnits = occupancy.totalUnits,
+                totalTenants = occupancy.totalTenants,
                 occupiedUnits = occupancy.occupied,
                 vacantUnits = occupancy.vacant,
                 expectedRentThisMonth = expected,

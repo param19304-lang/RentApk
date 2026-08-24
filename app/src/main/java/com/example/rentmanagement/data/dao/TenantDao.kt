@@ -26,4 +26,7 @@ interface TenantDao {
 
     @Query("SELECT * FROM tenants WHERE isDeleted = 0 AND (fullName LIKE '%' || :query || '%' OR phoneNumber LIKE '%' || :query || '%')")
     fun search(query: String): Flow<List<TenantEntity>>
+
+    @Query("SELECT COUNT(*) FROM tenants WHERE isDeleted = 0")
+    fun getTenantCount(): Flow<Int>
 }

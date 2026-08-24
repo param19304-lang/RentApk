@@ -15,6 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.rentmanagement.ui.components.AppDatePickerField
 import com.example.rentmanagement.utils.Constants
 import com.example.rentmanagement.utils.DateUtils
+import com.example.rentmanagement.ui.components.dismissKeyboardOnTap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +33,7 @@ fun AddLeaseScreen(
     var selectedTenantId by remember { mutableStateOf<Long?>(null) }
     var startDate by remember { mutableStateOf<Long?>(System.currentTimeMillis()) }
     var endDate by remember { mutableStateOf<Long?>(DateUtils.addMonths(System.currentTimeMillis(), 11)) }
+    var rentStartDate by remember { mutableStateOf<Long?>(null) }
     var monthlyRent by remember { mutableStateOf("") }
     var securityDeposit by remember { mutableStateOf("") }
     var dueDay by remember { mutableStateOf(Constants.DEFAULT_RENT_DUE_DAY.toString()) }
@@ -52,7 +54,14 @@ fun AddLeaseScreen(
             )
         }
     ) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .dismissKeyboardOnTap()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+        ) {
 
             ExposedDropdownMenuBox(expanded = propertyMenu, onExpandedChange = { propertyMenu = it }) {
                 OutlinedTextField(
@@ -111,6 +120,13 @@ fun AddLeaseScreen(
             Spacer(Modifier.height(12.dp))
             AppDatePickerField("Lease end date *", endDate, { endDate = it })
             Spacer(Modifier.height(12.dp))
+            AppDatePickerField("Rent start date *", rentStartDate ?: startDate, { rentStartDate = it })
+            Text(
+                "Defaults to the lease start date. Change this if rent begins later (e.g. a free first month).",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
                 monthlyRent, { monthlyRent = it }, label = { Text("Monthly rent *") },
@@ -165,6 +181,7 @@ fun AddLeaseScreen(
                         tenantId = selectedTenantId ?: 0L,
                         startDate = startDate ?: System.currentTimeMillis(),
                         endDate = endDate ?: System.currentTimeMillis(),
+                        rentStartDate = rentStartDate ?: startDate ?: System.currentTimeMillis(),
                         monthlyRent = monthlyRent.toDoubleOrNull() ?: -1.0,
                         securityDeposit = securityDeposit.toDoubleOrNull() ?: 0.0,
                         rentDueDay = dueDay.toIntOrNull() ?: Constants.DEFAULT_RENT_DUE_DAY,

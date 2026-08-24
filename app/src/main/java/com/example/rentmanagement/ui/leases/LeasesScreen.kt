@@ -57,6 +57,13 @@ fun LeasesScreen(
                                 "${DateUtils.formatDate(lease.startDate)} — ${DateUtils.formatDate(lease.endDate)} · ${CurrencyFormatter.format(lease.monthlyRent)}/mo",
                                 style = MaterialTheme.typography.bodySmall
                             )
+                            if (lease.rentStartDate != lease.startDate) {
+                                Text(
+                                    "Rent starts ${DateUtils.formatDate(lease.rentStartDate)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                             if (lease.status.name == "ACTIVE") {
                                 Spacer(Modifier.height(8.dp))
                                 TextButton(onClick = { viewModel.terminateLease(lease) }) { Text("Terminate lease") }
