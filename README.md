@@ -2,7 +2,7 @@
 
 Kotlin + Jetpack Compose + Material 3 + MVVM + Room + Hilt + DataStore + WorkManager.
 
-## Status: Phase 1 + Phase 2 complete, plus a navigation redesign (drawer menu)
+## Status: Phase 1 + Phase 2 complete, navigation drawer, and UI/UX redesign in progress
 
 Implemented now:
 - Project setup, Gradle config, package structure
@@ -70,6 +70,129 @@ top of it is still open), Room migrations (currently
 `fallbackToDestructiveMigration()` — increasingly important since the schema
 is now at v2), instrumented UI tests, cloud sync, AI assistant, per-tenant/
 lease document scoping in the UI (schema already supports it).
+
+## Rent Start Date (new field)
+
+There was no field separating "when the lease begins" from "when rent
+charging begins" — `GenerateMonthlyRentUseCase` only ever generated rent for
+whatever billing month was currently selected, with no concept of a lease's
+own start date at all (so it also wouldn't stop you from generating rent for
+a month before a lease existed).
+
+Added `LeaseEntity.rentStartDate` (defaults to `startDate`, so existing
+leases are unaffected — Room schema bumped 2 → 3, `fallbackToDestructiveMigration()`
+still applies). In **Add Lease**, a new "Rent start date" field appears right
+after Lease end date, pre-filled to match the lease start date but editable
+— e.g. for a free first month, set it a month later than the lease start.
+Validated against the lease's own start/end dates in `LeaseViewModel`.
+
+`GenerateMonthlyRentUseCase` now skips creating a rent record for any
+billing month that falls before a lease's `rentStartDate`. This does **not**
+prorate the first chargeable month — once generation begins, the full
+`monthlyRent` applies, consistent with the rest of the app's no-proration
+design. Rent start date is surfaced on the Leases list (when it differs from
+lease start) and on Tenant Details' Occupancy card.
+
+## Bug fixes this pass
+
+- **Keyboard vs. forms**: every form screen (Property, Unit, Tenant, Lease,
+  Expense, Record Payment, Settings, Login, Admin Setup, and the Add
+  User/Add Document dialogs) is now wrapped in a scrollable container so a
+  field hidden behind the keyboard can be scrolled into view, plus
+  `android:windowSoftInputMode="adjustResize"` on `MainActivity` so the
+  window actually resizes for the keyboard rather than just covering
+  content. Added a reusable `Modifier.dismissKeyboardOnTap()`
+  (`ui/components/KeyboardUtils.kt`) — tapping anywhere outside a field now
+  clears focus and hides the keyboard, applied to every full-screen form.
+- **Drawer scrolling**: `AppDrawerContent`'s `ModalDrawerSheet` is now
+  wrapped in `verticalScroll` — with 11+ destinations plus the user header
+  and logout, the menu no longer clips on smaller screens.
+- **Tenants count**: added `TenantDao.getTenantCount()` →
+  `TenantRepository.getTenantCount()` → wired into `GetDashboardStatsUseCase`
+  (`DashboardStats.totalTenants`) → shown as its own dashboard card.
+
+## Configurable dashboard (new)
+
+Dashboard cards are now individually toggleable: `domain/model/DashboardTile`
+enumerates all 11 cards/sections (Properties, Units, Tenants, Occupied,
+Vacant, Rent Overview, Total Expenses, Net Income, Recent Payments, Upcoming
+Rent, Lease Expiry). `data/preferences/DashboardPreferences.kt` persists the
+enabled set via DataStore (nothing stored yet = everything visible, matching
+prior behavior). A new **Settings → Customize Dashboard** screen
+(`DashboardCustomizationScreen` + `DashboardCustomizationViewModel`) lists
+every tile with a switch. `DashboardScreen` now builds its quick-stat grids
+dynamically from whichever tiles are enabled — including regrouping enabled
+cards two-per-row so there's no gap when some are hidden — and skips
+disabled sections entirely.
+
+## Design system & UI redesign (in progress — screen-by-screen)
+
+Following the "theme → navigation → dashboard → property list → ..." order:
+worked through the foundation plus the two Priority-1 screens this pass,
+verified each compiles cleanly, and stopped there rather than touching all
+~100 files at once.
+
+**Foundation (done):**
+- `ui/theme/Dimens.kt` — centralized `Spacing` (4/8/12/16/20/24/32dp) and
+  `Radius` (8/12/16/20dp) scales. New screens should pull from these instead
+  of hardcoding dp values.
+- `ui/theme/Type.kt` — a full `AppTypography` scale (headline/title/body/label,
+  each with an intentional weight) now wired into `RentManagementTheme`
+  instead of the Material3 default `Typography()`.
+- Semantic status colors — `SemanticColors` (success/warning/error/info),
+  provided via `LocalSemanticColors` so any composable can read
+  `LocalSemanticColors.current.success` etc. without prop-drilling. Kept
+  separate from the 9 brand palettes so status stays recognizable regardless
+  of which app theme is active.
+- New reusable components in `ui/components/`: `StatusBadge` (with overloads
+  that map `PaymentStatus`/`LeaseStatus`/`UnitStatus` straight to a colored
+  pill), `MetricCard` (icon + big value + label), `PrimaryButton` /
+  `SecondaryButton` / `DangerButton` (with a built-in loading state on
+  `PrimaryButton`), `AppSearchBar`, `FilterChipRow`. `EmptyState` gained an
+  optional `icon` parameter (added as a trailing param, so every existing call
+  site kept working unchanged).
+
+**Screens redesigned (done):**
+- **Dashboard** — greeting header ("Good Morning/Afternoon/Evening"), a 2×2
+  metric grid (Properties/Units/Occupied/Vacant), circular icon quick-actions,
+  a Rent Overview card (Expected/Collected/Pending/Overdue), Total
+  Expenses/Net Income metrics (Net Income's color flips red/green on sign),
+  then Recent Payments / Upcoming Rent (next 7 days) / Lease Expiry (next 30
+  days) lists — all backed by real data (`DashboardViewModel` now also pulls
+  from `PaymentRepository`, `RentRepository`, and `LeaseRepository`).
+- **Properties list** — each property is now a card with its icon, name,
+  location, "N Units • M Occupied", and an occupancy progress bar with a
+  percentage — instead of a bare text list. `PropertyViewModel` now also
+  exposes `units` so the list can compute per-property occupancy.
+
+**Property Details / Units (done):** overview stats (Total Units, Occupied,
+Vacant, total Monthly Rent) above a redesigned unit list — each unit is now a
+card with its status badge, rent, and current tenant name when occupied.
+`UnitViewModel` now also exposes the property and tenant list needed for this.
+
+**Tenants / Tenant Details (done):** tenant cards now show their current
+unit, phone (with a call icon), a live payment-status badge, and their next
+rent due date — computed by combining active leases + all rent records
+client-side in `TenantViewModel` (`TenantSummary`), no new DAO queries
+needed. Tapping a tenant now opens a **new Tenant Details screen**
+(`TenantDetailScreen` + `TenantDetailViewModel`) instead of jumping straight
+into the edit form: an avatar header with a tap-to-call button, an Occupancy
+card (property/unit/rent/lease end), a Contact Information card, and full
+Rent History — with an Edit icon in the top bar for the actual edit form.
+
+**Rent (done):** month stepper (‹ 2026-08 ›), a summary card
+(Expected/Collected/Pending/Overdue), a search bar (by tenant name), and
+status filter chips (All/Paid/Partially Paid/Pending/Overdue) — all backed
+by new `RentViewModel` state (`filteredRentRecords`, `monthSummary`).
+Rent cards now use the shared `StatusBadge` component and a clearer
+Payable/Paid/Remaining three-column layout.
+
+**Not yet redesigned** (still on the previous functional UI — nothing
+broken, just not restyled yet): Record Payment (functionally complete with
+PDF receipt sharing from Phase 2, just not visually restyled), Payment
+History, Lease Details, Expenses, Reports, Documents, Backup & Restore.
+Next up: Record Payment → Lease Details, per the brief's own priority
+order.
 
 ## Navigation
 
