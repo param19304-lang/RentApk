@@ -71,6 +71,58 @@ top of it is still open), Room migrations (currently
 is now at v2), instrumented UI tests, cloud sync, AI assistant, per-tenant/
 lease document scoping in the UI (schema already supports it).
 
+## Bug fixes (install conflict + settings not saving)
+
+**"App not installed as package conflicts with an existing package"** — this
+is Android refusing an install because the new APK's signing certificate
+doesn't match whatever's already installed under this `applicationId`. The
+concrete cause here: no debug signing config was pinned, so AGP was
+auto-generating (or using each machine's) `~/.android/debug.keystore` — on
+GitHub Actions' ephemeral runners in particular, that means a **different
+signing certificate on every CI run**, so a debug APK from one run could
+never install over a debug APK from a previous run.
+
+Fix: generated a fixed `app/debug.keystore` (committed to the repo — this is
+standard practice; it's not sensitive, it only ever signs debug builds) and
+wired it into `app/build.gradle.kts` as the explicit `debug` signing config.
+Every debug build — local or CI, this run or any future run — now has the
+identical signature, so updates install cleanly. Also added a
+`!app/debug.keystore` exception to `.gitignore`, since the blanket
+`*.keystore` rule (added for the *release* keystore) would otherwise have
+silently excluded this file too.
+
+If you're hitting this **right now** on a device with an old build already
+installed: uninstall the existing app once, then reinstall — after that,
+every future update should install over it without conflict. (This will
+also always happen, by design, if you install a *release*-signed APK over a
+*debug*-signed one or vice versa — they're deliberately signed differently;
+uninstall first when switching between the two.)
+
+**Landlord details (and other Settings values) not saving** — real bug,
+found and fixed. `SettingsScreen`'s `SettingsViewModel` is scoped to its nav
+back-stack entry (standard `hiltViewModel()` behavior inside a `NavHost`
+destination), so navigating away from Settings cancels its `viewModelScope`.
+Every save button (`setLandlordName`, `setCurrencySymbol`, the due-day/late-fee
+save) launched a plain `viewModelScope.launch { ... }` — if you tapped Save
+and then tapped Back before that coroutine finished writing to DataStore
+(a completely normal, fast sequence of taps), the write got cancelled
+mid-flight and silently dropped. Re-opening Settings would show your old
+value, looking exactly like "it's not saving."
+
+Fixed by wrapping the actual DataStore writes in `withContext(NonCancellable) { ... }`
+across `SettingsViewModel`, `DashboardCustomizationViewModel.setTileEnabled`,
+`UserManagementViewModel.setActive`, and `LeaseViewModel.terminateLease` —
+all `NonCancellable`
+[documentation](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-non-cancellable/)
+— the same "must-complete-despite-cancellation" pattern, applied everywhere
+a toggle/save on a nav-scoped screen could plausibly race with the user
+backing out right after. (Screens that already gate navigation behind a
+completed write — Property/Tenant/Unit/Expense/Lease-create, Document
+add — were never at risk; they only call `onSuccess()`/navigate after the
+suspend call returns.) Landlord name and currency symbol saves now also show
+a quick "Saved" confirmation Toast, so you don't have to leave and re-enter
+Settings just to check it worked.
+
 ## Rent Start Date (new field)
 
 There was no field separating "when the lease begins" from "when rent
@@ -87,11 +139,19 @@ after Lease end date, pre-filled to match the lease start date but editable
 Validated against the lease's own start/end dates in `LeaseViewModel`.
 
 `GenerateMonthlyRentUseCase` now skips creating a rent record for any
-billing month that falls before a lease's `rentStartDate`. This does **not**
-prorate the first chargeable month — once generation begins, the full
-`monthlyRent` applies, consistent with the rest of the app's no-proration
-design. Rent start date is surfaced on the Leases list (when it differs from
-lease start) and on Tenant Details' Occupancy card.
+billing month that falls before a lease's `rentStartDate`. Rent start date
+is surfaced on the Leases list (when it differs from lease start) and on
+Tenant Details' Occupancy card.
+
+**Update — proration is now implemented.** The first chargeable month is
+prorated by day count: `RentCalculator.prorateFirstMonthRent(rentAmount,
+billingMonth, rentStartDate)` charges `monthlyRent × daysRemainingInMonth /
+daysInMonth`, rounded to 2 decimals. Rent starting on the 1st of a month is
+unaffected (full rent, no proration math applied). Every month after the
+first charges the full `monthlyRent` as before — proration only ever applies
+once, to the partial first month. Unit-tested in `RentCalculatorTest`
+(starts-on-1st, starts-mid-month, starts-on-last-day, and the ordinary
+"prior month, no proration" case).
 
 ## Bug fixes this pass
 
@@ -187,12 +247,19 @@ by new `RentViewModel` state (`filteredRentRecords`, `monthSummary`).
 Rent cards now use the shared `StatusBadge` component and a clearer
 Payable/Paid/Remaining three-column layout.
 
+**Record Payment (done):** a header card with tenant name, unit, and status
+badge, a prominent "Amount Due" figure (red while unpaid, primary color once
+settled) with Total Payable/Amount Paid underneath, payment method as a
+radio list instead of a dropdown (per the spec's own mockup), and an
+"Allow advance payment" switch with a one-line explanation instead of a bare
+checkbox. `PaymentViewModel` now resolves and exposes `tenantName`/`unitName`
+for this. The post-success screen (PDF receipt share + Done) is unchanged in
+behavior, just restyled with the shared `PrimaryButton`/`SecondaryButton`.
+
 **Not yet redesigned** (still on the previous functional UI — nothing
-broken, just not restyled yet): Record Payment (functionally complete with
-PDF receipt sharing from Phase 2, just not visually restyled), Payment
-History, Lease Details, Expenses, Reports, Documents, Backup & Restore.
-Next up: Record Payment → Lease Details, per the brief's own priority
-order.
+broken, just not restyled yet): Payment History, Lease Details, Expenses,
+Reports, Documents, Backup & Restore. Next up: Lease Details → Expenses, per
+the brief's own priority order.
 
 ## Navigation
 
@@ -301,6 +368,69 @@ are soft (`isDeleted` flag) so historical financial records are never lost.
    cascades into Rent/Payment history (business rules #10–#12 in the spec).
 8. Formulas: `TotalPayable = rent + maintenance + otherCharges + previousOutstanding + lateFee`,
    `Remaining = TotalPayable − AmountPaid` (see `utils/RentCalculator.kt`, unit-tested).
+
+## Signed release APK
+
+### One-time setup
+
+**1. Generate a release keystore** (do this once, keep the file and
+passwords safe — losing them means you can never update the app under the
+same package again once it's published):
+
+```
+keytool -genkeypair -v -keystore release-keystore.jks -alias rent-manager -keyalg RSA -keysize 2048 -validity 10000
+```
+
+You'll be prompted for a keystore password, a key password (can be the same
+as the keystore password), and some identity fields (name, org, etc. — any
+values are fine, they just go in the certificate). Keep `release-keystore.jks`
+**outside the repo**, or if it's inside, it's already covered by `.gitignore`.
+
+**2a. For local signed builds:** copy `keystore.properties.example` to
+`keystore.properties` (repo root, next to `settings.gradle.kts`) and fill in
+the real values — `storeFile` should be an absolute path to your `.jks`.
+This file is gitignored; never commit it.
+
+**2b. For CI signed builds (GitHub Actions):** add these four repository
+secrets (Settings → Secrets and variables → Actions → New repository secret):
+
+| Secret | Value |
+|---|---|
+| `RELEASE_KEYSTORE_BASE64` | `base64 -w 0 release-keystore.jks` (Linux) or `base64 -i release-keystore.jks` (macOS) — paste the full output |
+| `RELEASE_KEYSTORE_PASSWORD` | your keystore password |
+| `RELEASE_KEY_ALIAS` | `rent-manager` (or whatever alias you used) |
+| `RELEASE_KEY_PASSWORD` | your key password |
+
+### Building the signed APK
+
+**Locally**, once `keystore.properties` exists:
+```
+gradle :app:assembleRelease
+```
+Output: `app/build/outputs/apk/release/app-release.apk`, already signed.
+
+**Via GitHub Actions** — `.github/workflows/release.yml` runs automatically
+when you push a tag matching `v*` (e.g. `git tag v1.0.0 && git push origin v1.0.0`),
+or manually via the Actions tab → "Signed Release APK" → Run workflow. It
+decodes the keystore secret, builds `assembleRelease`, uploads the signed
+APK as a workflow artifact, and — if triggered by a `v*` tag — also creates
+a GitHub Release with the APK attached.
+
+### Notes
+
+- `isMinifyEnabled = false` on the release build type, deliberately, for now.
+  R8/ProGuard code shrinking can break Hilt/Room's generated code without
+  carefully tuned keep rules, and I can't verify a minified build in this
+  sandbox (no Android SDK/network here — see the CI note below). Turning it
+  on is a reasonable next step, but should be done as its own change you can
+  test, not bundled silently into a signing change.
+- Bump `versionCode` (and usually `versionName`) in `app/build.gradle.kts`
+  before each release you intend to actually ship — the release workflow
+  does not do this for you.
+- This environment has no Android SDK or network access, so I've configured
+  everything correctly by inspection but haven't run an actual signed build
+  myself — same caveat as every APK build in this project. First real signed
+  build will be the true test; send me the log if `assembleRelease` fails.
 
 ## Build & run instructions
 
