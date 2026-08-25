@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -18,10 +21,47 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        // Fixed debug keystore, committed to the repo (not sensitive — never
+        // used for release signing). Without this, AGP auto-generates a new
+        // ~/.android/debug.keystore per machine/CI runner, so every debug
+        // build gets a DIFFERENT signature — which makes Android refuse to
+        // install an update over a previous debug build ("package conflicts
+        // with an existing package", i.e. INSTALL_FAILED_UPDATE_INCOMPATIBLE).
+        // Pinning this file means every debug APK — local or CI-built, this
+        // run or any future run — has the identical signature, so updates
+        // always install cleanly over each other.
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+
+        create("release") {
+            // Local builds: create app/keystore.properties (gitignored) — see
+            // keystore.properties.example. CI builds: set RELEASE_KEYSTORE_PATH /
+            // RELEASE_KEYSTORE_PASSWORD / RELEASE_KEY_ALIAS / RELEASE_KEY_PASSWORD
+            // env vars from repository secrets (see .github/workflows/release.yml).
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            val props = Properties()
+            if (keystorePropertiesFile.exists()) {
+                FileInputStream(keystorePropertiesFile).use { props.load(it) }
+            }
+
+            val storeFilePath = props.getProperty("storeFile") ?: System.getenv("RELEASE_KEYSTORE_PATH")
+            if (storeFilePath != null) storeFile = file(storeFilePath)
+            storePassword = props.getProperty("storePassword") ?: System.getenv("RELEASE_KEYSTORE_PASSWORD")
+            keyAlias = props.getProperty("keyAlias") ?: System.getenv("RELEASE_KEY_ALIAS")
+            keyPassword = props.getProperty("keyPassword") ?: System.getenv("RELEASE_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             isMinifyEnabled = false
