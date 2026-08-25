@@ -60,4 +60,17 @@ object DateUtils {
 
     fun daysBetween(fromMillis: Long, toMillis: Long): Long =
         (toMillis - fromMillis) / (24 * 60 * 60 * 1000)
+
+    fun daysInMonth(billingMonth: String): Int {
+        val parts = billingMonth.split("-")
+        val cal = Calendar.getInstance()
+        cal.set(parts[0].toInt(), parts[1].toInt() - 1, 1)
+        return cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+    }
+
+    fun dayOfMonth(millis: Long): Int {
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = millis
+        return cal.get(Calendar.DAY_OF_MONTH)
+    }
 }

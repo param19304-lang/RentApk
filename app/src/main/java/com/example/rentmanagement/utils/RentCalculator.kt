@@ -43,4 +43,24 @@ object RentCalculator {
             else -> PaymentStatus.PENDING
         }
     }
+
+    /**
+     * Prorates rent for a billing month in which the lease's rentStartDate
+     * falls partway through — e.g. rent starting on the 15th only charges for
+     * the remaining days of that month. Returns [rentAmount] unchanged when
+     * rentStartDate is on or before the first day of [billingMonth] (i.e. no
+     * proration needed — the normal, most common case).
+     *
+     * Rounded to 2 decimal places (nearest currency unit).
+     */
+    fun prorateFirstMonthRent(rentAmount: Double, billingMonth: String, rentStartDate: Long): Double {
+        val monthStart = DateUtils.startOfMonth(billingMonth)
+        if (rentStartDate <= monthStart) return rentAmount
+
+        val daysInMonth = DateUtils.daysInMonth(billingMonth)
+        val startDay = DateUtils.dayOfMonth(rentStartDate)
+        val daysCharged = (daysInMonth - startDay + 1).coerceIn(0, daysInMonth)
+        val prorated = rentAmount * daysCharged / daysInMonth
+        return kotlin.math.round(prorated * 100) / 100.0
+    }
 }

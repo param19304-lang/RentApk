@@ -16,8 +16,10 @@ import javax.inject.Inject
  *
  * A lease's rentStartDate (independent of its startDate — e.g. a free first
  * month) gates generation: no rent record is created for a billing month that
- * falls entirely before rent is due to start. This does not prorate the first
- * chargeable month; the full monthlyRent applies once generation begins.
+ * falls entirely before rent is due to start. The first chargeable month is
+ * prorated by day count when rentStartDate falls partway through it (see
+ * RentCalculator.prorateFirstMonthRent); every month after that charges the
+ * full monthlyRent.
  */
 class GenerateMonthlyRentUseCase @Inject constructor(
     private val leaseRepository: LeaseRepository,
@@ -37,8 +39,13 @@ class GenerateMonthlyRentUseCase @Inject constructor(
                 .sumOf { it.remainingAmount.coerceAtLeast(0.0) }
 
             val dueDate = DateUtils.dueDateForMonth(billingMonth, lease.rentDueDay)
+            val rentAmountForMonth = if (billingMonth == rentStartBillingMonth) {
+                RentCalculator.prorateFirstMonthRent(lease.monthlyRent, billingMonth, lease.rentStartDate)
+            } else {
+                lease.monthlyRent
+            }
             val totalPayable = RentCalculator.calculateTotalPayable(
-                rentAmount = lease.monthlyRent,
+                rentAmount = rentAmountForMonth,
                 previousOutstanding = outstanding
             )
 
@@ -48,7 +55,7 @@ class GenerateMonthlyRentUseCase @Inject constructor(
                 propertyId = lease.propertyId,
                 unitId = lease.unitId,
                 billingMonth = billingMonth,
-                rentAmount = lease.monthlyRent,
+                rentAmount = rentAmountForMonth,
                 previousOutstanding = outstanding,
                 totalPayable = totalPayable,
                 amountPaid = 0.0,
