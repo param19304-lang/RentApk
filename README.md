@@ -481,7 +481,6 @@ the Actions tab.
   scoping filter would be added.
 
 ## Continuing the build
-
 This was generated in one pass covering Phase 1 of the spec. For follow-up
 requests, tell me what to add next (Expenses UI, Reports, PDF receipts,
 Notifications, Backup/Restore, Security, or bug fixes) and I'll modify only the
