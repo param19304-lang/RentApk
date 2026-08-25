@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,6 +50,7 @@ fun SettingsScreen(
     val landlordName by viewModel.landlordName.collectAsState()
     val defaultDueDay by viewModel.defaultDueDay.collectAsState()
     val defaultLateFee by viewModel.defaultLateFee.collectAsState()
+    val context = LocalContext.current
 
     var landlordNameField by remember(landlordName) { mutableStateOf(landlordName) }
     var currencyField by remember(currencySymbol) { mutableStateOf(currencySymbol) }
@@ -128,7 +130,11 @@ fun SettingsScreen(
                 label = { Text("Landlord / manager name") },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    IconButton(onClick = { viewModel.setLandlordName(landlordNameField) }) {
+                    IconButton(onClick = {
+                        viewModel.setLandlordName(landlordNameField) {
+                            android.widget.Toast.makeText(context, "Saved", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
                         Icon(Icons.Default.Check, contentDescription = "Save")
                     }
                 }
@@ -141,7 +147,11 @@ fun SettingsScreen(
                 label = { Text("Currency symbol") },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    IconButton(onClick = { viewModel.setCurrencySymbol(currencyField) }) {
+                    IconButton(onClick = {
+                        viewModel.setCurrencySymbol(currencyField) {
+                            android.widget.Toast.makeText(context, "Saved", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
                         Icon(Icons.Default.Check, contentDescription = "Save")
                     }
                 }
@@ -163,8 +173,13 @@ fun SettingsScreen(
             Spacer(Modifier.height(12.dp))
             Button(
                 onClick = {
-                    dueDayField.toIntOrNull()?.let { viewModel.setDefaultDueDay(it) }
-                    lateFeeField.toDoubleOrNull()?.let { viewModel.setDefaultLateFee(it) }
+                    val day = dueDayField.toIntOrNull()
+                    val fee = lateFeeField.toDoubleOrNull()
+                    if (day != null && fee != null) {
+                        viewModel.saveRentDefaults(day, fee) {
+                            android.widget.Toast.makeText(context, "Rent defaults saved", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Save rent defaults") }

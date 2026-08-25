@@ -45,6 +45,12 @@ class PaymentViewModel @Inject constructor(
     private val _selectedRent = MutableStateFlow<RentEntity?>(null)
     val selectedRent: StateFlow<RentEntity?> = _selectedRent
 
+    private val _tenantName = MutableStateFlow<String?>(null)
+    val tenantName: StateFlow<String?> = _tenantName
+
+    private val _unitName = MutableStateFlow<String?>(null)
+    val unitName: StateFlow<String?> = _unitName
+
     private val _result = MutableStateFlow<RecordPaymentResult?>(null)
     val result: StateFlow<RecordPaymentResult?> = _result
 
@@ -55,7 +61,14 @@ class PaymentViewModel @Inject constructor(
     val receiptFile: StateFlow<File?> = _receiptFile
 
     fun loadRent(rentId: Long) {
-        viewModelScope.launch { _selectedRent.value = rentRepository.getRentById(rentId) }
+        viewModelScope.launch {
+            val r = rentRepository.getRentById(rentId)
+            _selectedRent.value = r
+            if (r != null) {
+                _tenantName.value = tenantRepository.getTenantById(r.tenantId)?.fullName
+                _unitName.value = unitRepository.getUnitById(r.unitId)?.unitName
+            }
+        }
     }
 
     fun recordPayment(

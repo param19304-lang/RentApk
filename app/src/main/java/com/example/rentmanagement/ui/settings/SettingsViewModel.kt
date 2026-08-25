@@ -7,10 +7,12 @@ import com.example.rentmanagement.data.preferences.ThemePreferences
 import com.example.rentmanagement.domain.model.AppColorTheme
 import com.example.rentmanagement.domain.model.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,11 +42,46 @@ class SettingsViewModel @Inject constructor(
     val defaultLateFee: StateFlow<Double> = appPreferences.defaultLateFee
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
-    fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { themePreferences.setThemeMode(mode) }
-    fun setColorTheme(theme: AppColorTheme) = viewModelScope.launch { themePreferences.setColorTheme(theme) }
-    fun setCustomAccent(hex: String) = viewModelScope.launch { themePreferences.setCustomAccent(hex) }
-    fun setCurrencySymbol(symbol: String) = viewModelScope.launch { appPreferences.setCurrencySymbol(symbol) }
-    fun setLandlordName(name: String) = viewModelScope.launch { appPreferences.setLandlordName(name) }
-    fun setDefaultDueDay(day: Int) = viewModelScope.launch { appPreferences.setDefaultDueDay(day) }
-    fun setDefaultLateFee(fee: Double) = viewModelScope.launch { appPreferences.setDefaultLateFee(fee) }
+    // NonCancellable: these are quick, deliberate user saves triggered from a
+    // screen the user commonly leaves right afterward (tap Save, tap Back).
+    // Settings screen's ViewModel is scoped to its nav back-stack entry, so
+    // navigating away cancels viewModelScope — without NonCancellable, a save
+    // that hadn't finished writing to DataStore yet would be silently
+    // dropped. This was the actual cause of "landlord details not saving".
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch { withContext(NonCancellable) { themePreferences.setThemeMode(mode) } }
+    }
+
+    fun setColorTheme(theme: AppColorTheme) {
+        viewModelScope.launch { withContext(NonCancellable) { themePreferences.setColorTheme(theme) } }
+    }
+
+    fun setCustomAccent(hex: String) {
+        viewModelScope.launch { withContext(NonCancellable) { themePreferences.setCustomAccent(hex) } }
+    }
+
+    fun setCurrencySymbol(symbol: String, onSaved: () -> Unit = {}) {
+        viewModelScope.launch {
+            withContext(NonCancellable) { appPreferences.setCurrencySymbol(symbol) }
+            onSaved()
+        }
+    }
+
+    fun setLandlordName(name: String, onSaved: () -> Unit = {}) {
+        viewModelScope.launch {
+            withContext(NonCancellable) { appPreferences.setLandlordName(name) }
+            onSaved()
+        }
+    }
+
+    fun saveRentDefaults(dueDay: Int, lateFee: Double, onSaved: () -> Unit = {}) {
+        viewModelScope.launch {
+            withContext(NonCancellable) {
+                appPreferences.setDefaultDueDay(dueDay)
+                appPreferences.setDefaultLateFee(lateFee)
+            }
+            onSaved()
+        }
+    }
 }

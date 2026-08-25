@@ -7,11 +7,13 @@ import com.example.rentmanagement.data.repository.AuthResult
 import com.example.rentmanagement.data.repository.UserAccountRepository
 import com.example.rentmanagement.domain.model.UserRole
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,7 +37,7 @@ class UserManagementViewModel @Inject constructor(
     }
 
     fun setActive(id: Long, isActive: Boolean) {
-        viewModelScope.launch { repository.setActive(id, isActive) }
+        viewModelScope.launch { withContext(NonCancellable) { repository.setActive(id, isActive) } }
     }
 
     fun clearError() { _saveError.value = null }
