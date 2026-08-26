@@ -91,6 +91,24 @@ identical signature, so updates install cleanly. Also added a
 `*.keystore` rule (added for the *release* keystore) would otherwise have
 silently excluded this file too.
 
+**Update — the `!app/debug.keystore` gitignore negation didn't hold** (CI
+failed with `Keystore file '.../app/debug.keystore' not found for signing
+config 'debug'` — the file was in the zip but never reached the GitHub
+repo). Negation patterns in `.gitignore` are a known footgun across git
+tooling, so rather than debug which client mishandled it, removed the
+blanket `*.jks`/`*.keystore` rule entirely and replaced it with a rule
+naming the exact release keystore filename instead
+(`release-keystore.jks`) — nothing left that could accidentally catch the
+committed debug keystore. **After pulling this update, confirm the file is
+actually tracked before pushing:**
+```
+git add app/debug.keystore
+git status   # should show app/debug.keystore staged, not ignored
+git ls-files app/debug.keystore   # should print the path once committed
+```
+If it still doesn't show up, your global (not per-repo) gitignore may have
+its own keystore rule — check `git config --get core.excludesfile`.
+
 If you're hitting this **right now** on a device with an old build already
 installed: uninstall the existing app once, then reinstall — after that,
 every future update should install over it without conflict. (This will
@@ -256,10 +274,44 @@ checkbox. `PaymentViewModel` now resolves and exposes `tenantName`/`unitName`
 for this. The post-success screen (PDF receipt share + Done) is unchanged in
 behavior, just restyled with the shared `PrimaryButton`/`SecondaryButton`.
 
-**Not yet redesigned** (still on the previous functional UI — nothing
-broken, just not restyled yet): Payment History, Lease Details, Expenses,
-Reports, Documents, Backup & Restore. Next up: Lease Details → Expenses, per
-the brief's own priority order.
+## UI redesign — now complete
+
+**Lease Details (new screen):** didn't exist before — tapping a lease
+previously did nothing but show a terminate button inline in the list. Now
+opens a dedicated `LeaseDetailScreen`: tenant/property header with status
+badge, a full Lease Terms card (unit, dates, rent start if different, rent,
+deposit, due day, grace period, late fee, notice period, escalation %),
+a Terminate Lease button (with confirmation dialog) that only shows for
+active leases, and the lease's complete Rent History. Required a new
+`RentDao.getRentForLease()` query — `RentRepository` had per-tenant and
+per-month lookups but nothing scoped to a single lease. Termination logic
+moved from `LeaseViewModel` into the new `LeaseDetailViewModel` (removed
+the now-dead duplicate from `LeaseViewModel` rather than leave two copies
+of the same logic to drift apart).
+
+**Payment History:** a Total Collected `MetricCard` up top, and each payment
+card now resolves and shows the tenant's name (previously payments only
+showed amount/method/date/reference with no way to tell whose payment it
+was without cross-referencing the Rent tab).
+
+**Expenses:** a Total Expenses `MetricCard`, cards moved onto the shared
+Spacing/Radius tokens.
+
+**Documents:** same spacing/radius pass, empty state now uses a folder icon.
+
+**Backup & Restore:** Export/Import wrapped in cards, buttons swapped to the
+shared `PrimaryButton`/`DangerButton` (Import is destructive, so it's
+visually marked as such now, not a plain outlined button indistinguishable
+from Export).
+
+**Reports** was left as-is — it already had its own consistent card-based
+layout with a month stepper, search/filter, and CSV/PDF export from when it
+was originally built, and didn't need a rework to match the rest.
+
+Every Priority 1/2/3 screen from the original brief is now redesigned:
+Dashboard, Properties, Property Details, Units, Tenants, Tenant Details,
+Rent, Record Payment, Lease Details, Payment History, Expenses, Reports,
+Documents, Backup & Restore, Settings.
 
 ## Navigation
 
@@ -481,6 +533,7 @@ the Actions tab.
   scoping filter would be added.
 
 ## Continuing the build
+
 This was generated in one pass covering Phase 1 of the spec. For follow-up
 requests, tell me what to add next (Expenses UI, Reports, PDF receipts,
 Notifications, Backup/Restore, Security, or bug fixes) and I'll modify only the
