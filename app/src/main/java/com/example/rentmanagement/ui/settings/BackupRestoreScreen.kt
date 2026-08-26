@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -13,7 +14,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.rentmanagement.ui.components.ConfirmDialog
+import com.example.rentmanagement.ui.components.DangerButton
+import com.example.rentmanagement.ui.components.PrimaryButton
 import com.example.rentmanagement.ui.components.SectionHeader
+import com.example.rentmanagement.ui.theme.Radius
+import com.example.rentmanagement.ui.theme.Spacing
 import com.example.rentmanagement.utils.BackupManager
 import kotlinx.coroutines.delay
 
@@ -52,35 +57,43 @@ fun BackupRestoreScreen(
             )
         }
     ) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp)) {
+        Column(Modifier.padding(padding).padding(Spacing.lg)) {
             SectionHeader("Backup")
-            Text(
-                "Save a copy of all your properties, tenants, leases, rent, payments, and expenses to a file you choose.",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(Modifier.height(12.dp))
-            Button(
-                onClick = { exportLauncher.launch("rent-manager-backup-${System.currentTimeMillis()}.db") },
-                enabled = !isBusy,
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Export Backup") }
+            Card(shape = RoundedCornerShape(Radius.card), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(Spacing.lg)) {
+                    Text(
+                        "Save a copy of all your properties, tenants, leases, rent, payments, and expenses to a file you choose.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(Modifier.height(Spacing.md))
+                    PrimaryButton(
+                        text = "Export Backup",
+                        onClick = { exportLauncher.launch("rent-manager-backup-${System.currentTimeMillis()}.db") },
+                        enabled = !isBusy
+                    )
+                }
+            }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(Spacing.xxl))
             SectionHeader("Restore")
-            Text(
-                "Restoring replaces all current data with the contents of the backup file. This cannot be undone.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error
-            )
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = { importLauncher.launch(arrayOf("*/*")) },
-                enabled = !isBusy,
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Import Backup") }
+            Card(shape = RoundedCornerShape(Radius.card), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(Spacing.lg)) {
+                    Text(
+                        "Restoring replaces all current data with the contents of the backup file. This cannot be undone.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(Modifier.height(Spacing.md))
+                    DangerButton(
+                        text = "Import Backup",
+                        onClick = { importLauncher.launch(arrayOf("*/*")) },
+                        enabled = !isBusy
+                    )
+                }
+            }
 
             if (status != null) {
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(Spacing.lg))
                 Text(status!!, style = MaterialTheme.typography.bodyMedium)
             }
         }

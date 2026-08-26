@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -20,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.rentmanagement.domain.model.DocumentCategory
 import com.example.rentmanagement.ui.components.EmptyState
+import com.example.rentmanagement.ui.theme.Radius
+import com.example.rentmanagement.ui.theme.Spacing
 import com.example.rentmanagement.utils.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,12 +60,22 @@ fun DocumentsScreen(
         }
     ) { padding ->
         if (documents.isEmpty()) {
-            EmptyState("No documents yet", "Tap + to upload a lease agreement, ID, bill, or photo", Modifier.padding(padding))
+            EmptyState(
+                "No documents yet",
+                "Tap + to upload a lease agreement, ID, bill, or photo",
+                Modifier.padding(padding),
+                icon = Icons.Default.Folder
+            )
         } else {
-            LazyColumn(contentPadding = PaddingValues(16.dp), modifier = Modifier.padding(padding)) {
+            LazyColumn(
+                contentPadding = PaddingValues(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md),
+                modifier = Modifier.padding(padding)
+            ) {
                 items(documents, key = { it.id }) { doc ->
                     Card(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        shape = RoundedCornerShape(Radius.card),
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             runCatching {
                                 val uri = android.net.Uri.parse(doc.uri)
@@ -73,14 +87,15 @@ fun DocumentsScreen(
                             }
                         }
                     ) {
-                        Column(Modifier.padding(16.dp)) {
+                        Column(Modifier.padding(Spacing.lg)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(doc.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                 AssistChip(onClick = {}, label = { Text(doc.category.name) })
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text(DateUtils.formatDate(doc.uploadedAt), style = MaterialTheme.typography.bodySmall)
+                            Text(DateUtils.formatDate(doc.uploadedAt), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             if (!doc.notes.isNullOrBlank()) {
+                                Spacer(Modifier.height(4.dp))
                                 Text(doc.notes, style = MaterialTheme.typography.bodySmall)
                             }
                         }

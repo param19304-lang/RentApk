@@ -24,6 +24,8 @@ object Routes {
 
     const val LEASES = "leases"
     const val LEASE_FORM = "lease_form"
+    const val LEASE_DETAIL = "lease_detail/{leaseId}"
+    fun leaseDetail(leaseId: Long) = "lease_detail/$leaseId"
 
     const val EXPENSES = "expenses"
     const val EXPENSE_FORM = "expense_form?expenseId={expenseId}"

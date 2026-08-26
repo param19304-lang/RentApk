@@ -25,6 +25,7 @@ import com.example.rentmanagement.ui.documents.DocumentsScreen
 import com.example.rentmanagement.ui.expenses.AddEditExpenseScreen
 import com.example.rentmanagement.ui.expenses.ExpensesScreen
 import com.example.rentmanagement.ui.leases.AddLeaseScreen
+import com.example.rentmanagement.ui.leases.LeaseDetailScreen
 import com.example.rentmanagement.ui.leases.LeasesScreen
 import com.example.rentmanagement.ui.payments.PaymentsScreen
 import com.example.rentmanagement.ui.payments.RecordPaymentScreen
@@ -211,11 +212,18 @@ fun AppScaffold(
                 composable(Routes.LEASES) {
                     LeasesScreen(
                         onBack = { navController.popBackStack() },
-                        onAddLease = { navController.navigate(Routes.LEASE_FORM) }
+                        onAddLease = { navController.navigate(Routes.LEASE_FORM) },
+                        onOpenLease = { id -> navController.navigate(Routes.leaseDetail(id)) }
                     )
                 }
                 composable(Routes.LEASE_FORM) {
                     AddLeaseScreen(onBack = { navController.popBackStack() })
+                }
+                composable(
+                    route = Routes.LEASE_DETAIL,
+                    arguments = listOf(navArgument("leaseId") { type = NavType.LongType })
+                ) {
+                    LeaseDetailScreen(onBack = { navController.popBackStack() })
                 }
                 composable(Routes.EXPENSES) {
                     ExpensesScreen(

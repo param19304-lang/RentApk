@@ -13,13 +13,11 @@ import com.example.rentmanagement.data.repository.UnitRepository
 import com.example.rentmanagement.domain.model.LeaseStatus
 import com.example.rentmanagement.domain.model.UnitStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -107,15 +105,6 @@ class LeaseViewModel @Inject constructor(
             unitRepository.updateOccupancy(unitId, UnitStatus.OCCUPIED, tenantId)
             _saveError.value = null
             onSuccess()
-        }
-    }
-
-    fun terminateLease(lease: LeaseEntity) {
-        viewModelScope.launch {
-            withContext(NonCancellable) {
-                leaseRepository.updateLease(lease.copy(status = LeaseStatus.TERMINATED, terminatedAt = System.currentTimeMillis()))
-                unitRepository.updateOccupancy(lease.unitId, UnitStatus.VACANT, null)
-            }
         }
     }
 }

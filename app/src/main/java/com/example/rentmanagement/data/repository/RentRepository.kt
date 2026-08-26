@@ -13,6 +13,7 @@ interface RentRepository {
     suspend fun getRentById(id: Long): RentEntity?
     fun observeRentById(id: Long): Flow<RentEntity?>
     suspend fun getOutstandingForLease(leaseId: Long): List<RentEntity>
+    fun getRentForLease(leaseId: Long): Flow<List<RentEntity>>
     fun getOverdueRent(): Flow<List<RentEntity>>
     fun getUpcomingDue(now: Long, until: Long): Flow<List<RentEntity>>
     suspend fun addRent(rent: RentEntity): Long
@@ -31,6 +32,7 @@ class RentRepositoryImpl @Inject constructor(
     override suspend fun getRentById(id: Long) = dao.getRentById(id)
     override fun observeRentById(id: Long) = dao.observeRentById(id)
     override suspend fun getOutstandingForLease(leaseId: Long) = dao.getOutstandingForLease(leaseId)
+    override fun getRentForLease(leaseId: Long) = dao.getRentForLease(leaseId)
     override fun getOverdueRent() = dao.getOverdueRent()
     override fun getUpcomingDue(now: Long, until: Long) = dao.getUpcomingDue(now, until)
     override suspend fun addRent(rent: RentEntity) = dao.insert(rent)

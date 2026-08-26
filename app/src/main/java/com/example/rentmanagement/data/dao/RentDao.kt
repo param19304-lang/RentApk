@@ -34,6 +34,9 @@ interface RentDao {
     @Query("SELECT * FROM rent_records WHERE status IN ('PENDING','PARTIALLY_PAID','OVERDUE') AND leaseId = :leaseId ORDER BY dueDate ASC")
     suspend fun getOutstandingForLease(leaseId: Long): List<RentEntity>
 
+    @Query("SELECT * FROM rent_records WHERE leaseId = :leaseId ORDER BY dueDate DESC")
+    fun getRentForLease(leaseId: Long): Flow<List<RentEntity>>
+
     @Query("SELECT * FROM rent_records WHERE status = 'OVERDUE'")
     fun getOverdueRent(): Flow<List<RentEntity>>
 

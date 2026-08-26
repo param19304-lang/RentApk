@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.rentmanagement.data.entities.PaymentEntity
 import com.example.rentmanagement.data.entities.RentEntity
+import com.example.rentmanagement.data.entities.TenantEntity
 import com.example.rentmanagement.data.preferences.AppPreferences
 import com.example.rentmanagement.data.repository.PaymentRepository
 import com.example.rentmanagement.data.repository.PropertyRepository
@@ -40,6 +41,9 @@ class PaymentViewModel @Inject constructor(
 ) : ViewModel() {
 
     val payments: StateFlow<List<PaymentEntity>> = paymentRepository.getAllPayments()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val tenants: StateFlow<List<TenantEntity>> = tenantRepository.getAllTenants()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _selectedRent = MutableStateFlow<RentEntity?>(null)
