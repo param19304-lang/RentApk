@@ -72,4 +72,44 @@ class RentCalculatorTest {
             RentCalculator.applyPayment(0.0, 15000.0, -100.0)
         }
     }
+
+    @Test
+    fun `rent starting on the 1st is not prorated`() {
+        // 2026-08 has 31 days; rentStartDate = Aug 1
+        val aug1 = dateMillis(2026, 8, 1)
+        val result = RentCalculator.prorateFirstMonthRent(31000.0, "2026-08", aug1)
+        assertEquals(31000.0, result, 0.001)
+    }
+
+    @Test
+    fun `rent starting mid-month is prorated by remaining days`() {
+        // 2026-04 has 30 days; starting on the 15th charges 16 of 30 days
+        val apr15 = dateMillis(2026, 4, 15)
+        val result = RentCalculator.prorateFirstMonthRent(3000.0, "2026-04", apr15)
+        assertEquals(1600.0, result, 0.001) // 3000 * 16/30
+    }
+
+    @Test
+    fun `rent starting on the last day of the month charges one day`() {
+        // 2026-04 has 30 days; starting on the 30th charges 1 of 30 days
+        val apr30 = dateMillis(2026, 4, 30)
+        val result = RentCalculator.prorateFirstMonthRent(3000.0, "2026-04", apr30)
+        assertEquals(100.0, result, 0.001) // 3000 * 1/30
+    }
+
+    @Test
+    fun `rent starting before the billing month is not prorated`() {
+        // rentStartDate in July, billing month is August -> full rent (this is
+        // the normal case for every month after the first chargeable one)
+        val jul1 = dateMillis(2026, 7, 1)
+        val result = RentCalculator.prorateFirstMonthRent(31000.0, "2026-08", jul1)
+        assertEquals(31000.0, result, 0.001)
+    }
+
+    private fun dateMillis(year: Int, month: Int, day: Int): Long {
+        val cal = java.util.Calendar.getInstance()
+        cal.set(year, month - 1, day, 12, 0, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        return cal.timeInMillis
+    }
 }
