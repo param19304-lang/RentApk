@@ -1,0 +1,75 @@
+name: Signed Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-signed-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+
+      - name: Decode release keystore
+        run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > release-keystore.jks
+
+      - name: Build signed, minified release APK + AAB
+        env:
+          RELEASE_KEYSTORE_PATH: ${{ github.workspace }}/release-keystore.jks
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: gradle :app:assembleRelease :app:bundleRelease --stacktrace
+
+      - name: Remove decoded keystore
+        if: always()
+        run: rm -f release-keystore.jks
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: rent-management-release-apk
+          path: app/build/outputs/apk/release/*.apk
+
+      - name: Upload signed AAB (for Play Store)
+        uses: actions/upload-artifact@v4
+        with:
+          name: rent-management-release-aab
+          path: app/build/outputs/bundle/release/*.aab
+
+      - name: Upload R8 mapping file
+        # Required to de-obfuscate any crash stack trace from this build —
+        # class/method names are renamed by minification. Without this file,
+        # a release-build crash log is effectively unreadable. Keep it
+        # matched to the exact build/tag it came from.
+        uses: actions/upload-artifact@v4
+        with:
+          name: rent-management-release-mapping
+          path: app/build/outputs/mapping/release/mapping.txt
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
+          generate_release_notes: true
