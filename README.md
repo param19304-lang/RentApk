@@ -4,6 +4,7 @@ Kotlin + Jetpack Compose + Material 3 + MVVM + Room + Hilt + DataStore + WorkMan
 
 ## Status: Phase 1 + Phase 2 complete, navigation drawer, and UI/UX redesign in progress
 
+
 Implemented now:
 - Project setup, Gradle config, package structure
 - Theme system: Light/Dark/System + 8 ready-made palettes (Mono, Midnight, Ocean,
